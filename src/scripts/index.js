@@ -13,6 +13,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   await app.renderPage();
 
   window.addEventListener("hashchange", async () => {
-    await app.renderPage();
+    if (document.startViewTransition) {
+      document.startViewTransition(async () => {
+        await app.renderPage();
+      });
+    } else {
+      await app.renderPage();
+    }
   });
 });

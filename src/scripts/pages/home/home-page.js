@@ -1,4 +1,4 @@
-import StoriesAPI from "../../data/api";
+import HomePresenter from "./home-presenter";
 import { showFormattedDate } from "../../utils/index";
 import MapUtils from "../../utils/map";
 
@@ -7,9 +7,9 @@ export default class HomePage {
     return `
       <section class="container">
         <div class="skip-link">
-          <a href="#content" class="skip-to-content">Skip to content</a>
+          <a href="#main-content" class="skip-to-content">Skip to content</a>
         </div>
-        <h1 id="content" tabindex="0">Dicoding Story</h1>
+        <h1 id="main-content" tabindex="0">Dicoding Story</h1>
         <div id="stories-container" class="stories-container">
           <div class="loading">Loading stories...</div>
         </div>
@@ -21,25 +21,32 @@ export default class HomePage {
     const storiesContainer = document.getElementById("stories-container");
 
     try {
-      const response = await StoriesAPI.getStories(1, 10, 1);
+      const response = await HomePresenter.loadStories();
 
       if (response.error) {
-        storiesContainer.innerHTML = `<div class="error-message">${response.message}</div>`;
+        this._renderError(response.message);
         return;
       }
 
       if (!response.listStory || response.listStory.length === 0) {
-        storiesContainer.innerHTML =
-          '<div class="empty-message">No stories available</div>';
+        this._renderEmpty();
         return;
       }
 
       this._renderStories(response.listStory);
     } catch (error) {
-      console.error("Error fetching stories:", error);
-      storiesContainer.innerHTML =
-        '<div class="error-message">Failed to load stories</div>';
+      this._renderError(error.message);
     }
+  }
+
+  _renderError(message) {
+    const storiesContainer = document.getElementById("stories-container");
+    storiesContainer.innerHTML = `<div class="error-message">${message}</div>`;
+  }
+
+  _renderEmpty() {
+    const storiesContainer = document.getElementById("stories-container");
+    storiesContainer.innerHTML = `<div class="empty-message">No stories available</div>`;
   }
 
   _renderStories(stories) {
@@ -73,7 +80,6 @@ export default class HomePage {
 
     storiesContainer.innerHTML = storiesHTML;
 
-    // inisialisasi map untuk cerita dengan lokasi
     stories.forEach((story) => {
       if (story.lat && story.lon) {
         const mapContainer = document.getElementById(`map-${story.id}`);
