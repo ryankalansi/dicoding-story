@@ -1,5 +1,6 @@
 import StoriesAPI from "../../data/api";
 import Auth from "../../utils/auth";
+import LoginPresenter from "./login-presenter";
 
 export default class LoginPage {
   async render() {

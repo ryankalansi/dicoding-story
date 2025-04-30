@@ -1,4 +1,5 @@
 import StoriesAPI from "../../data/api";
+import RegisterPresenter from "./register-presenter";
 
 export default class RegisterPage {
   async render() {

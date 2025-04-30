@@ -1,6 +1,7 @@
 import routes from "../routes/routes";
 import { getActiveRoute } from "../routes/url-parser";
 import Auth from "../utils/auth";
+import CameraUtils from "../utils/camera";
 
 class App {
   #content = null;
@@ -96,14 +97,14 @@ class App {
 
     if (document.startViewTransition) {
       const transition = document.startViewTransition(async () => {
+        CameraUtils.clean?.();
         this.#content.innerHTML = await page.render();
         await page.afterRender();
       });
 
-      // menunggu transisi selesai
       await transition.finished;
     } else {
-      // fallback browser
+      CameraUtils.clean?.();
       this.#content.innerHTML = await page.render();
       await page.afterRender();
     }

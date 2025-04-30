@@ -2,6 +2,7 @@ import StoriesAPI from "../../data/api";
 import { showFormattedDate } from "../../utils/index";
 import { parseActivePathname } from "../../routes/url-parser";
 import MapUtils from "../../utils/map";
+import DetailPresenter from "./detail-presenter";
 
 export default class DetailPage {
   async render() {
