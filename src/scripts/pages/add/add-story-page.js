@@ -1,4 +1,3 @@
-import StoriesAPI from "../../data/api";
 import CameraUtils from "../../utils/camera";
 import MapUtils from "../../utils/map";
 import AddStoryPresenter from "./add-story-presenter";
@@ -133,23 +132,12 @@ export default class AddStoryPage {
         submitButton.disabled = true;
         submitButton.textContent = "Submitting...";
 
-        let response;
-
-        if (StoriesAPI.checkAuth()) {
-          response = await StoriesAPI.addStory({
-            description,
-            photo,
-            lat: selectedLat,
-            lon: selectedLng,
-          });
-        } else {
-          response = await StoriesAPI.addGuestStory({
-            description,
-            photo,
-            lat: selectedLat,
-            lon: selectedLng,
-          });
-        }
+        const response = await AddStoryPresenter.add({
+          description,
+          photo,
+          lat: selectedLat,
+          lon: selectedLng,
+        });
 
         if (response.error) {
           alert(`Failed to add story: ${response.message}`);
@@ -159,6 +147,24 @@ export default class AddStoryPage {
           CameraUtils.clean();
           // kembali ke beranda
           window.location.hash = "#/";
+
+          setTimeout(() => {
+            window.scrollTo({ top: 0, behavior: "auto" });
+
+            const tryFocus = () => {
+              const contentEl = document.getElementById("content");
+              if (contentEl) {
+                contentEl.setAttribute("tabindex", "-1");
+                contentEl.focus();
+              }
+            };
+
+            if (document.startViewTransition) {
+              document.startViewTransition(tryFocus);
+            } else {
+              tryFocus();
+            }
+          }, 200);
         }
       } catch (error) {
         console.error("Error adding story:", error);

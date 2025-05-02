@@ -1,4 +1,3 @@
-import StoriesAPI from "../../data/api";
 import RegisterPresenter from "./register-presenter";
 
 export default class RegisterPage {
@@ -52,7 +51,7 @@ export default class RegisterPage {
         registerButton.disabled = true;
         registerButton.textContent = "Registering...";
 
-        const response = await StoriesAPI.register({
+        const response = await RegisterPresenter.register({
           name,
           email,
           password,

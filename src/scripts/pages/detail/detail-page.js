@@ -1,4 +1,3 @@
-import StoriesAPI from "../../data/api";
 import { showFormattedDate } from "../../utils/index";
 import { parseActivePathname } from "../../routes/url-parser";
 import MapUtils from "../../utils/map";
@@ -32,7 +31,7 @@ export default class DetailPage {
     }
 
     try {
-      const response = await StoriesAPI.getStoryDetail(id);
+      const response = await DetailPresenter.loadDetail(id);
 
       if (response.error) {
         storyDetail.innerHTML = `<div class="error-message">${response.message}</div>`;

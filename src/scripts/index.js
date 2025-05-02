@@ -31,6 +31,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       skipLink.blur();
       mainContent.focus();
       mainContent.scrollIntoView();
+
+      window.location.hash = "main-content";
     });
   }
 });

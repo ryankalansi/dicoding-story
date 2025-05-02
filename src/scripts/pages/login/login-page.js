@@ -1,4 +1,3 @@
-import StoriesAPI from "../../data/api";
 import Auth from "../../utils/auth";
 import LoginPresenter from "./login-presenter";
 
@@ -46,10 +45,7 @@ export default class LoginPage {
         loginButton.disabled = true;
         loginButton.textContent = "Logging in...";
 
-        const response = await StoriesAPI.login({
-          email,
-          password,
-        });
+        const response = await LoginPresenter.login({ email, password });
 
         if (!response.error) {
           alert("Login successful!");
