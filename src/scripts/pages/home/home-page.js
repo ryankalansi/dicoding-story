@@ -3,6 +3,10 @@ import { showFormattedDate } from "../../utils/index";
 import MapUtils from "../../utils/map";
 
 export default class HomePage {
+  constructor() {
+    this.presenter = new HomePresenter({ view: this });
+  }
+
   async render() {
     return `
       <section class="container">
@@ -18,35 +22,28 @@ export default class HomePage {
   }
 
   async afterRender() {
-    const storiesContainer = document.getElementById("stories-container");
+    this.storiesContainer = document.getElementById("stories-container");
+    this.presenter.loadStories(); // Load data via the Presenter
+  }
 
-    try {
-      const response = await HomePresenter.loadStories();
-
-      if (response.error) {
-        this._renderError(response.message);
-        return;
-      }
-
-      if (!response.listStory || response.listStory.length === 0) {
-        this._renderEmpty();
-        return;
-      }
-
-      this._renderStories(response.listStory);
-    } catch (error) {
-      this._renderError(error.message);
+  showStories(stories) {
+    if (!stories || stories.length === 0) {
+      this._renderEmpty();
+      return;
     }
+    this._renderStories(stories);
+  }
+
+  showError(message) {
+    this._renderError(message);
   }
 
   _renderError(message) {
-    const storiesContainer = document.getElementById("stories-container");
-    storiesContainer.innerHTML = `<div class="error-message">${message}</div>`;
+    this.storiesContainer.innerHTML = `<div class="error-message">${message}</div>`;
   }
 
   _renderEmpty() {
-    const storiesContainer = document.getElementById("stories-container");
-    storiesContainer.innerHTML = `<div class="empty-message">No stories available</div>`;
+    this.storiesContainer.innerHTML = `<div class="empty-message">No stories available</div>`;
   }
 
   _renderStories(stories) {

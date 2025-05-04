@@ -1,14 +1,20 @@
 import StoriesAPI from "../../data/api";
 
-const HomePresenter = {
+class HomePresenter {
+  constructor({ view }) {
+    // Receive the view
+    this.view = view;
+    this.storiesAPI = StoriesAPI;
+  }
+
   async loadStories() {
     try {
-      const response = await StoriesAPI.getStories(1, 10, 1);
-      return response;
+      const response = await this.storiesAPI.getStories(1, 10, 1);
+      this.view.showStories(response.listStory);
     } catch (error) {
-      throw new Error("Failed to fetch stories");
+      this.view.showError(error.message);
     }
-  },
-};
+  }
+}
 
 export default HomePresenter;

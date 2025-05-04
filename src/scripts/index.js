@@ -13,12 +13,22 @@ document.addEventListener("DOMContentLoaded", async () => {
   await app.renderPage();
 
   window.addEventListener("hashchange", async () => {
+    const tryFocus = () => {
+      const mainContent = document.querySelector("#main-content");
+      if (mainContent) {
+        mainContent.setAttribute("tabindex", "-1");
+        mainContent.focus();
+      }
+    };
+
     if (document.startViewTransition) {
       document.startViewTransition(async () => {
         await app.renderPage();
+        tryFocus();
       });
     } else {
       await app.renderPage();
+      tryFocus();
     }
   });
 
@@ -28,11 +38,19 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (skipLink && mainContent) {
     skipLink.addEventListener("click", function (event) {
       event.preventDefault();
-      skipLink.blur();
+      mainContent.setAttribute("tabindex", "-1"); //
       mainContent.focus();
-      mainContent.scrollIntoView();
-
-      window.location.hash = "main-content";
+      mainContent.scrollIntoView({ behavior: "smooth", block: "start" });
     });
+
+    skipLink.addEventListener("blur", () => {
+      skipLink.setAttribute("tabindex", "-1");
+    });
+
+    if (window.location.hash === "#main-content") {
+      mainContent.setAttribute("tabindex", "-1");
+      mainContent.focus();
+      mainContent.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
   }
 });
