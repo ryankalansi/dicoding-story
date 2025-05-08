@@ -16,8 +16,9 @@ document.addEventListener("DOMContentLoaded", async () => {
     const tryFocus = () => {
       const mainContent = document.querySelector("#main-content");
       if (mainContent) {
-        mainContent.setAttribute("tabindex", "-1");
+        mainContent.setAttribute("tabindex", "0");
         mainContent.focus();
+        mainContent.setAttribute("tabindex", "-1");
       }
     };
 
@@ -38,19 +39,17 @@ document.addEventListener("DOMContentLoaded", async () => {
   if (skipLink && mainContent) {
     skipLink.addEventListener("click", function (event) {
       event.preventDefault();
-      mainContent.setAttribute("tabindex", "-1"); //
+      mainContent.setAttribute("tabindex", "0");
       mainContent.focus();
       mainContent.scrollIntoView({ behavior: "smooth", block: "start" });
-    });
-
-    skipLink.addEventListener("blur", () => {
-      skipLink.setAttribute("tabindex", "-1");
+      mainContent.setAttribute("tabindex", "-1");
     });
 
     if (window.location.hash === "#main-content") {
-      mainContent.setAttribute("tabindex", "-1");
+      mainContent.setAttribute("tabindex", "0");
       mainContent.focus();
       mainContent.scrollIntoView({ behavior: "smooth", block: "start" });
+      mainContent.setAttribute("tabindex", "-1");
     }
   }
 });

@@ -30,20 +30,13 @@ export default class DetailPage {
       return;
     }
 
-    try {
-      const response = await DetailPresenter.loadDetail(id);
-
-      if (response.error) {
-        storyDetail.innerHTML = `<div class="error-message">${response.message}</div>`;
-        return;
-      }
-
-      this._renderStoryDetail(response.story);
-    } catch (error) {
-      console.error("Error fetching story detail:", error);
-      storyDetail.innerHTML =
-        '<div class="error-message">Failed to load story detail</div>';
-    }
+    DetailPresenter.loadDetail({
+      id,
+      onSuccess: (story) => this._renderStoryDetail(story),
+      onError: (message) => {
+        storyDetail.innerHTML = `<div class="error-message">${message}</div>`;
+      },
+    });
   }
 
   _renderStoryDetail(story) {
@@ -65,7 +58,6 @@ export default class DetailPage {
 
     storyDetail.innerHTML = storyHTML;
 
-    // inisialisasi map
     if (story.lat && story.lon) {
       const mapContainer = document.getElementById("detail-map");
       if (mapContainer) {

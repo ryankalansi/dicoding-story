@@ -9,14 +9,14 @@ export default class AddStoryPage {
         <div class="skip-link">
           <a href="#content" class="skip-to-content">Skip to content</a>
         </div>
-        <h1 id="content" tabindex="0">Add New Story</h1>
-        
+        <h1 id="content">Add New Story</h1>
+
         <form id="add-story-form" class="add-story-form">
           <div class="form-group">
             <label for="description">Description</label>
             <textarea id="description" name="description" required></textarea>
           </div>
-          
+
           <div class="form-group">
             <label>Photo</label>
             <div class="camera-container">
@@ -29,7 +29,7 @@ export default class AddStoryPage {
               </div>
             </div>
           </div>
-          
+
           <div class="form-group">
             <label>Location (Click on map to set location)</label>
             <div id="location-map" class="location-map"></div>
@@ -38,7 +38,7 @@ export default class AddStoryPage {
               <button type="button" id="reset-location" class="reset-button">Reset Location</button>
             </div>
           </div>
-          
+
           <div class="form-actions">
             <button type="submit" id="submit-button" class="submit-button">Submit Story</button>
           </div>
@@ -85,9 +85,7 @@ export default class AddStoryPage {
           6
         )}, Lng: ${lng.toFixed(6)}`;
 
-        if (locationMarker) {
-          locationMarker.remove();
-        }
+        if (locationMarker) locationMarker.remove();
 
         locationMarker = MapUtils.addMarker({
           map,
@@ -99,10 +97,7 @@ export default class AddStoryPage {
     });
 
     resetLocationButton.addEventListener("click", () => {
-      if (locationMarker) {
-        locationMarker.remove();
-      }
-
+      if (locationMarker) locationMarker.remove();
       selectedLat = undefined;
       selectedLng = undefined;
       selectedLocationElement.textContent = "Not selected";
@@ -110,6 +105,7 @@ export default class AddStoryPage {
 
     // form submit
     const form = document.getElementById("add-story-form");
+    const submitButton = document.getElementById("submit-button");
 
     form.addEventListener("submit", async (event) => {
       event.preventDefault();
@@ -117,40 +113,21 @@ export default class AddStoryPage {
       const description = document.getElementById("description").value;
       const photo = CameraUtils.getPhotoData();
 
-      if (!description) {
-        alert("Please enter a description for your story");
-        return;
-      }
+      submitButton.disabled = true;
+      submitButton.textContent = "Submitting...";
 
-      if (!photo) {
-        alert("Please capture a photo for your story");
-        return;
-      }
-
-      try {
-        const submitButton = document.getElementById("submit-button");
-        submitButton.disabled = true;
-        submitButton.textContent = "Submitting...";
-
-        const response = await AddStoryPresenter.add({
-          description,
-          photo,
-          lat: selectedLat,
-          lon: selectedLng,
-        });
-
-        if (response.error) {
-          alert(`Failed to add story: ${response.message}`);
-        } else {
+      AddStoryPresenter.handleFormSubmit({
+        description,
+        photo,
+        lat: selectedLat,
+        lon: selectedLng,
+        onSuccess: () => {
           alert("Story added successfully!");
-          // berhentikan kamera
           CameraUtils.clean();
-          // kembali ke beranda
           window.location.hash = "#/";
 
           setTimeout(() => {
             window.scrollTo({ top: 0, behavior: "auto" });
-
             const tryFocus = () => {
               const contentEl = document.getElementById("content");
               if (contentEl) {
@@ -165,15 +142,14 @@ export default class AddStoryPage {
               tryFocus();
             }
           }, 200);
-        }
-      } catch (error) {
-        console.error("Error adding story:", error);
-        alert("Failed to add story. Please try again.");
-      } finally {
-        const submitButton = document.getElementById("submit-button");
+        },
+        onError: (message) => {
+          alert(`Failed to add story: ${message}`);
+        },
+      }).finally(() => {
         submitButton.disabled = false;
         submitButton.textContent = "Submit Story";
-      }
+      });
     });
   }
 }
