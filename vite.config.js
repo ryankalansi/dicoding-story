@@ -18,7 +18,7 @@ export default defineConfig({
   plugins: [
     VitePWA({
       registerType: "autoUpdate",
-      includeAssets: ["favicon.png"],
+      includeAssets: ["favicon.png", "favicon-192.png", "favicon-512.png"],
       manifest: {
         name: "Dicoding Stories",
         short_name: "Stories",
@@ -29,14 +29,16 @@ export default defineConfig({
         theme_color: "#1a73e8",
         icons: [
           {
-            src: "favicon.png",
+            src: "/favicon-192.png",
             sizes: "192x192",
             type: "image/png",
+            purpose: "any",
           },
           {
-            src: "favicon.png",
+            src: "/favicon-512.png",
             sizes: "512x512",
             type: "image/png",
+            purpose: "any maskable",
           },
         ],
       },

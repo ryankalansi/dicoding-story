@@ -1,2 +1,2 @@
-APP_URL=<https://ryankalansi.github.io/dicoding-story>
+APP_URL=<https://dicodingstory.netlify.app/>
 MAP_SERVICE_API_KEY=<->

@@ -1,5 +1,3 @@
-import { icon } from "leaflet";
-
 self.addEventListener("push", function (event) {
   let data = {};
   if (event.data) {
@@ -8,11 +6,11 @@ self.addEventListener("push", function (event) {
 
   const options = {
     body: data.message || "Push message received",
-    icon: "/favicon.png",
+    icon: "/favicon-192.png",
     vibrate: [100, 50, 100],
   };
 
   event.waitUntil(
-    self.ServiceWorkerRegistration.showNotification("Dicoding Stories", options)
+    self.registration.showNotification("Dicoding Stories", options)
   );
 });
