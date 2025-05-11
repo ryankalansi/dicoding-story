@@ -1,5 +1,6 @@
 import "../styles/styles.css";
 import "leaflet/dist/leaflet.css";
+import PushNotification from "./notifications/push-notification";
 
 import App from "./pages/app";
 
@@ -52,4 +53,6 @@ document.addEventListener("DOMContentLoaded", async () => {
       mainContent.setAttribute("tabindex", "-1");
     }
   }
+
+  PushNotification.requestPermission();
 });
