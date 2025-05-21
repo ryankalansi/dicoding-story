@@ -13,6 +13,12 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   await app.renderPage();
 
+  // Inisialisasi push notification
+  PushNotification.init({
+    subscribeButton: document.querySelector("#subscribe-button"),
+    unsubscribeButton: document.querySelector("#unsubscribe-button"),
+  });
+
   window.addEventListener("hashchange", async () => {
     const tryFocus = () => {
       const mainContent = document.querySelector("#main-content");
@@ -53,6 +59,4 @@ document.addEventListener("DOMContentLoaded", async () => {
       mainContent.setAttribute("tabindex", "-1");
     }
   }
-
-  PushNotification.requestPermission();
 });

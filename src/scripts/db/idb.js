@@ -1,7 +1,7 @@
 import { openDB } from "idb";
 
 const DB_NAME = "dicoding-stories-db";
-const DB_VERSION = 1;
+const DB_VERSION = 3;
 const STORE_NAME = "stories";
 
 const dbPromise = openDB(DB_NAME, DB_VERSION, {

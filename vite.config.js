@@ -43,7 +43,7 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,png,svg}"],
+        globPatterns: ["**/*.{js,css,html,png,svg,woff2}"],
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/story-api\.dicoding\.dev\/v1\//,
@@ -52,14 +52,46 @@ export default defineConfig({
               cacheName: "api-cache",
               expiration: {
                 maxEntries: 50,
-                maxAgeSeconds: 86400,
+                maxAgeSeconds: 60 * 60,
+              },
+              networkTimeoutSeconds: 10,
+            },
+          },
+          {
+            urlPattern:
+              /^https:\/\/story-api\.dicoding\.dev\/images\/stories\//,
+            handler: "StaleWhileRevalidate",
+            options: {
+              cacheName: "story-images",
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 7 * 24 * 60 * 60,
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          {
+            urlPattern: /^https:\/\/ui-avatars\.com\/api/,
+            handler: "StaleWhileRevalidate",
+            options: {
+              cacheName: "avatar-images",
+              expiration: {
+                maxEntries: 50,
+                maxAgeSeconds: 7 * 24 * 60 * 60,
               },
             },
           },
         ],
       },
+      strategies: "injectManifest",
+      srcDir: ".", // karena root = src, maka ini cukup
+      filename: "service-worker.js", // hanya "service-worker.js", TANPA "src/"
+      injectRegister: "auto",
       devOptions: {
         enabled: true,
+        type: "module",
       },
     }),
   ],

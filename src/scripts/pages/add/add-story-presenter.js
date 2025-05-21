@@ -1,4 +1,5 @@
 import StoriesAPI from "../../data/api";
+import PushNotification from "../../notifications/push-notification";
 
 const AddStoryPresenter = {
   async handleFormSubmit({ description, photo, lat, lon, onSuccess, onError }) {
@@ -20,6 +21,17 @@ const AddStoryPresenter = {
       if (response.error) {
         onError(response.message);
       } else {
+        console.log("Story created successfully!");
+
+        // Selalu kirim notifikasi lokal setelah berhasil menambahkan story
+        try {
+          await PushNotification.sendStoryCreatedNotification(description);
+          console.log("Notification sent successfully");
+        } catch (notifError) {
+          console.error("Failed to send notification:", notifError);
+          // Tetap anggap berhasil meskipun notifikasi gagal
+        }
+
         onSuccess();
       }
     } catch (err) {
