@@ -1,7 +1,6 @@
 import "../styles/styles.css";
 import "leaflet/dist/leaflet.css";
 import PushNotification from "./notifications/push-notification";
-
 import App from "./pages/app";
 
 document.addEventListener("DOMContentLoaded", async () => {
@@ -11,14 +10,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     navigationDrawer: document.querySelector("#navigation-drawer"),
   });
 
+  // Render halaman pertama kali
   await app.renderPage();
 
-  // Inisialisasi push notification
-  PushNotification.init({
-    subscribeButton: document.querySelector("#subscribe-button"),
-    unsubscribeButton: document.querySelector("#unsubscribe-button"),
-  });
-
+  // Navigasi hashchange (SPA)
   window.addEventListener("hashchange", async () => {
     const tryFocus = () => {
       const mainContent = document.querySelector("#main-content");
@@ -40,6 +35,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   });
 
+  // Skip to content
   const skipLink = document.querySelector(".skip-to-content");
   const mainContent = document.querySelector("#main-content");
 
@@ -58,5 +54,22 @@ document.addEventListener("DOMContentLoaded", async () => {
       mainContent.scrollIntoView({ behavior: "smooth", block: "start" });
       mainContent.setAttribute("tabindex", "-1");
     }
+  }
+
+  // ===== PUSH NOTIFICATION SETUP =====
+  await PushNotification.requestPermission(); // Minta izin
+  await PushNotification.checkSubscription(); // Cek status awal tombol
+
+  const subscribeBtn = document.querySelector("#subscribe-push");
+  const unsubscribeBtn = document.querySelector("#unsubscribe-push");
+
+  if (subscribeBtn && unsubscribeBtn) {
+    subscribeBtn.addEventListener("click", () => {
+      PushNotification.subscribePush();
+    });
+
+    unsubscribeBtn.addEventListener("click", () => {
+      PushNotification.unsubscribePush();
+    });
   }
 });
