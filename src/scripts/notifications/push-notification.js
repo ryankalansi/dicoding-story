@@ -26,37 +26,39 @@ const PushNotification = {
       });
 
       console.log("Subscribed!", JSON.stringify(sub));
-      this._updateButtons(true);
 
-      // Ambil token dari localStorage (pastikan user sudah login)
+      // Cek apakah user sudah login untuk kirim ke backend
       const token = localStorage.getItem("token");
-      if (!token) {
-        alert("Anda harus login terlebih dahulu untuk subscribe notifikasi.");
-        this._updateButtons(false);
-        return;
-      }
+      if (
+        token &&
+        token !== "null" &&
+        token !== "undefined" &&
+        token.trim() !== ""
+      ) {
+        // Kirim subscription ke backend API dengan header Authorization
+        const response = await fetch(
+          "https://story-api.dicoding.dev/v1/notifications/subscribe",
+          {
+            method: "POST",
+            headers: {
+              "Authorization": `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(sub),
+          }
+        );
 
-      // Kirim subscription ke backend API dengan header Authorization
-      const response = await fetch(
-        "https://story-api.dicoding.dev/v1/notifications/subscribe",
-        {
-          method: "POST",
-          headers: {
-            "Authorization": `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(sub),
+        if (!response.ok) {
+          console.warn(`Gagal subscribe ke server: ${response.status}`);
+          // Tapi tetap lanjut karena browser subscription sudah berhasil
         }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Gagal subscribe ke server: ${response.status}`);
       }
 
-      alert("Berhasil subscribe notifikasi.");
+      this._updateButtons(true);
+      this._showNotification("Anda sudah berhasil berlangganan", "success");
     } catch (err) {
       console.error("Gagal subscribe:", err);
-      alert(`Gagal subscribe: ${err.message}`);
+      this._showNotification(`Gagal subscribe: ${err.message}`, "error");
       this._updateButtons(false);
     }
   },
@@ -66,11 +68,15 @@ const PushNotification = {
     const sub = await reg.pushManager.getSubscription();
 
     if (sub) {
-      await sub.unsubscribe();
-      console.log("Unsubscribed from push notifications.");
-      this._updateButtons(false);
-
-      alert("Anda telah berhenti berlangganan notifikasi.");
+      try {
+        await sub.unsubscribe();
+        console.log("Unsubscribed from push notifications.");
+        this._updateButtons(false);
+        this._showNotification("Anda berhenti berlangganan", "info");
+      } catch (err) {
+        console.error("Gagal unsubscribe:", err);
+        this._showNotification("Gagal berhenti berlangganan", "error");
+      }
     }
   },
 
@@ -93,6 +99,84 @@ const PushNotification = {
         unsubscribeBtn.hidden = true;
       }
     }
+  },
+
+  _showNotification(message, type = "info") {
+    // Buat elemen notifikasi container
+    const notification = document.createElement("div");
+    notification.className = `notification notification-${type}`;
+
+    // Buat icon element
+    const icon = document.createElement("img");
+    icon.src = "/favicon-192.png"; // Gunakan icon yang sama seperti di service worker
+    icon.alt = "Notification Icon";
+    Object.assign(icon.style, {
+      width: "24px",
+      height: "24px",
+      marginRight: "12px",
+      flexShrink: "0",
+    });
+
+    // Buat text element
+    const textElement = document.createElement("span");
+    textElement.textContent = message;
+
+    // Tambahkan icon dan text ke notification
+    notification.appendChild(icon);
+    notification.appendChild(textElement);
+
+    // Styling untuk notifikasi container
+    Object.assign(notification.style, {
+      position: "fixed",
+      bottom: "20px", // Pindah ke bawah
+      right: "20px",
+      display: "flex",
+      alignItems: "center",
+      padding: "12px 16px",
+      borderRadius: "8px",
+      color: "white",
+      fontWeight: "500",
+      fontSize: "14px",
+      zIndex: "9999",
+      maxWidth: "350px",
+      wordWrap: "break-word",
+      boxShadow: "0 4px 12px rgba(0, 0, 0, 0.15)",
+      transform: "translateX(100%)",
+      transition: "transform 0.3s ease-in-out",
+    });
+
+    // Warna berdasarkan type
+    switch (type) {
+      case "success":
+        notification.style.backgroundColor = "#4CAF50";
+        break;
+      case "error":
+        notification.style.backgroundColor = "#f44336";
+        break;
+      case "info":
+        notification.style.backgroundColor = "#2196F3";
+        break;
+      default:
+        notification.style.backgroundColor = "#757575";
+    }
+
+    // Tambahkan ke body
+    document.body.appendChild(notification);
+
+    // Animasi masuk
+    setTimeout(() => {
+      notification.style.transform = "translateX(0)";
+    }, 100);
+
+    // Hapus setelah 4 detik (lebih lama karena ada icon)
+    setTimeout(() => {
+      notification.style.transform = "translateX(100%)";
+      setTimeout(() => {
+        if (notification.parentNode) {
+          notification.parentNode.removeChild(notification);
+        }
+      }, 300);
+    }, 4000);
   },
 
   _urlBase64ToUint8Array(base64String) {

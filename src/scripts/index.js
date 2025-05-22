@@ -72,4 +72,22 @@ document.addEventListener("DOMContentLoaded", async () => {
       PushNotification.unsubscribePush();
     });
   }
+
+  // ===== LISTEN FOR LOGIN/LOGOUT EVENTS =====
+  // Jika ada event login, cek ulang subscription status
+  window.addEventListener("userLoggedIn", async () => {
+    await PushNotification.checkSubscription();
+  });
+
+  // Jika ada event logout, update button status
+  window.addEventListener("userLoggedOut", async () => {
+    await PushNotification.checkSubscription();
+  });
+
+  // Optional: Listen for storage changes (jika login/logout mengubah localStorage)
+  window.addEventListener("storage", (e) => {
+    if (e.key === "token") {
+      PushNotification.checkSubscription();
+    }
+  });
 });
