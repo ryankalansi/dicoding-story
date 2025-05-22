@@ -179,6 +179,38 @@ const PushNotification = {
     }, 4000);
   },
 
+  async sendStoryCreatedNotification(description) {
+    // Kirim notifikasi lokal ketika story berhasil dibuat
+    const shortDescription =
+      description.length > 50
+        ? description.substring(0, 50) + "..."
+        : description;
+
+    this._showNotification(
+      `Story baru telah ditambahkan: "${shortDescription}"`,
+      "success"
+    );
+
+    // Optional: Juga kirim browser notification jika user sudah subscribe
+    if ("serviceWorker" in navigator && "PushManager" in window) {
+      try {
+        const reg = await navigator.serviceWorker.ready;
+        const sub = await reg.pushManager.getSubscription();
+
+        if (sub) {
+          // Kirim notifikasi melalui service worker
+          reg.active.postMessage({
+            type: "SHOW_NOTIFICATION",
+            title: "Dicoding Stories",
+            body: `Story baru telah ditambahkan: "${shortDescription}"`,
+            icon: "/favicon-192.png",
+          });
+        }
+      } catch (error) {
+        console.log("Service worker notification error:", error);
+      }
+    }
+  },
   _urlBase64ToUint8Array(base64String) {
     const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
     const base64 = (base64String + padding)

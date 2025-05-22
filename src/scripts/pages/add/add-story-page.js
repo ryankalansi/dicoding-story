@@ -1,6 +1,7 @@
 import CameraUtils from "../../utils/camera";
 import MapUtils from "../../utils/map";
 import AddStoryPresenter from "./add-story-presenter";
+import PushNotification from "../../notifications/push-notification";
 
 export default class AddStoryPage {
   async render() {
@@ -122,7 +123,10 @@ export default class AddStoryPage {
         lat: selectedLat,
         lon: selectedLng,
         onSuccess: () => {
-          alert("Story added successfully!");
+          // Ganti alert dengan notifikasi custom
+          // alert("Story added successfully!");
+          // Notifikasi sudah ditangani di presenter
+
           CameraUtils.clean();
           window.location.hash = "#/";
 
@@ -144,7 +148,11 @@ export default class AddStoryPage {
           }, 200);
         },
         onError: (message) => {
-          alert(`Failed to add story: ${message}`);
+          // Ganti alert dengan notifikasi custom
+          PushNotification._showNotification(
+            `Gagal menambahkan story: ${message}`,
+            "error"
+          );
         },
       }).finally(() => {
         submitButton.disabled = false;
