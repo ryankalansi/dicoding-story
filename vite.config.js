@@ -52,19 +52,47 @@ export default defineConfig({
               cacheName: "api-cache",
               expiration: {
                 maxEntries: 50,
-                maxAgeSeconds: 86400,
+                maxAgeSeconds: 86400, // 1 day
               },
+              networkTimeoutSeconds: 10,
             },
           },
           {
             urlPattern:
               /^https:\/\/story-api\.dicoding\.dev\/images\/stories\//,
-            handler: "CacheFirst",
+            handler: "StaleWhileRevalidate",
             options: {
               cacheName: "story-images",
               expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 7 * 24 * 60 * 60, // 7 days
+              },
+              cacheKeyWillBeUsed: async ({ request }) => {
+                return `${request.url}`;
+              },
+            },
+          },
+          // Cache untuk gambar avatar (ui-avatars.com)
+          {
+            urlPattern: /^https:\/\/ui-avatars\.com\/api\//,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "avatar-images",
+              expiration: {
                 maxEntries: 50,
-                maxAgeSeconds: 7 * 24 * 60 * 60,
+                maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+              },
+            },
+          },
+          // Cache untuk gambar eksternal lainnya
+          {
+            urlPattern: /\.(?:png|jpg|jpeg|svg|gif|webp)$/,
+            handler: "CacheFirst",
+            options: {
+              cacheName: "images-cache",
+              expiration: {
+                maxEntries: 100,
+                maxAgeSeconds: 7 * 24 * 60 * 60, // 7 days
               },
             },
           },
