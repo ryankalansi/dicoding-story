@@ -1,4 +1,3 @@
-// src/scripts/pages/home/home-page.js
 import HomePresenter from "./home-presenter";
 import { showFormattedDate } from "../../utils/index";
 import MapUtils from "../../utils/map";

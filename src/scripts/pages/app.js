@@ -1,4 +1,3 @@
-// src/scripts/pages/app.js
 import routes from "../routes/routes";
 import { getActiveRoute } from "../routes/url-parser";
 import Auth from "../utils/auth";

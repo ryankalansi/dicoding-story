@@ -1,4 +1,3 @@
-// src/scripts/pages/saved/saved-stories-page.js
 import SavedStoriesPresenter from "./saved-stories-presenter";
 import { showFormattedDate } from "../../utils/index";
 import MapUtils from "../../utils/map";

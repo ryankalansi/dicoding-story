@@ -1,4 +1,3 @@
-// src/scripts/db/data-store.js
 import IDBHelper from "./idb";
 
 const DataStore = {

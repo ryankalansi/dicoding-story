@@ -1,4 +1,3 @@
-// src/scripts/db/idb.js
 import { openDB } from "idb";
 
 const DB_NAME = "dicoding-stories-db";

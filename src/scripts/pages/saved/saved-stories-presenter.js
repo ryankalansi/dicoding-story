@@ -1,4 +1,3 @@
-// src/scripts/pages/saved/saved-stories-presenter.js
 import DataStore from "../../db/data-store";
 
 class SavedStoriesPresenter {
