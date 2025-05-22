@@ -81,11 +81,11 @@ define(['./workbox-9dc17825'], (function (workbox) { 'use strict';
     "url": "registerSW.js",
     "revision": "3ca0b8505b4bec776b69afdba2768812"
   }, {
-    "url": "index.html",
-    "revision": "0.6la10mf6eh"
+    "url": "/index.html",
+    "revision": "0.5ep74qvt1v"
   }], {});
   workbox.cleanupOutdatedCaches();
-  workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("index.html"), {
+  workbox.registerRoute(new workbox.NavigationRoute(workbox.createHandlerBoundToURL("/index.html"), {
     allowlist: [/^\/$/]
   }));
   workbox.registerRoute(/^https:\/\/story-api\.dicoding\.dev\/v1\//, new workbox.NetworkFirst({

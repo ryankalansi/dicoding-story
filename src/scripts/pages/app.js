@@ -1,7 +1,9 @@
+// src/scripts/pages/app.js
 import routes from "../routes/routes";
 import { getActiveRoute } from "../routes/url-parser";
 import Auth from "../utils/auth";
 import CameraUtils from "../utils/camera";
+import DataStore from "../db/data-store";
 
 class App {
   #content = null;
@@ -15,6 +17,7 @@ class App {
 
     this.#setupDrawer();
     this.#setupAuth();
+    this.#updateSavedStoriesCount(); // Update count saat app init
   }
 
   #setupDrawer() {
@@ -45,6 +48,12 @@ class App {
     navList.innerHTML = `
       <li><a href="#/">Beranda</a></li>
       <li><a href="#/add">Tambah Cerita</a></li>
+      <li>
+        <a href="#/saved" id="saved-stories-link">
+          📖 Saved Stories
+          <span id="saved-count" class="saved-count">0</span>
+        </a>
+      </li>
       <li><a href="#/about">Tentang</a></li>
     `;
 
@@ -85,6 +94,22 @@ class App {
     });
   }
 
+  // Method untuk update count saved stories
+  async #updateSavedStoriesCount() {
+    try {
+      const savedStories = await DataStore.getSavedStories();
+      const count = savedStories.length;
+      const countElement = document.getElementById("saved-count");
+
+      if (countElement) {
+        countElement.textContent = count;
+        countElement.style.display = count > 0 ? "inline" : "none";
+      }
+    } catch (error) {
+      console.error("Error updating saved stories count:", error);
+    }
+  }
+
   async renderPage() {
     const url = getActiveRoute();
     const page = routes[url];
@@ -100,6 +125,8 @@ class App {
         CameraUtils.clean?.();
         this.#content.innerHTML = await page.render();
         await page.afterRender();
+        // Update count setelah render halaman
+        await this.#updateSavedStoriesCount();
       });
 
       await transition.finished;
@@ -107,6 +134,8 @@ class App {
       CameraUtils.clean?.();
       this.#content.innerHTML = await page.render();
       await page.afterRender();
+      // Update count setelah render halaman
+      await this.#updateSavedStoriesCount();
     }
   }
 }

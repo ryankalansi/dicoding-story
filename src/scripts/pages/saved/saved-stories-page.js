@@ -1,12 +1,12 @@
-// src/scripts/pages/home/home-page.js
-import HomePresenter from "./home-presenter";
+// src/scripts/pages/saved/saved-stories-page.js
+import SavedStoriesPresenter from "./saved-stories-presenter";
 import { showFormattedDate } from "../../utils/index";
 import MapUtils from "../../utils/map";
 import DataStore from "../../db/data-store";
 
-export default class HomePage {
+export default class SavedStoriesPage {
   constructor() {
-    this.presenter = new HomePresenter({ view: this });
+    this.presenter = new SavedStoriesPresenter({ view: this });
   }
 
   async render() {
@@ -15,60 +15,71 @@ export default class HomePage {
         <div class="skip-link">
           <a href="#main-content" class="skip-to-content">Skip to content</a>
         </div>
-        <h1 id="main-content" tabindex="0">Dicoding Story</h1>
-        <div id="stories-container" class="stories-container">
-          <div class="loading">Loading stories...</div>
+        <h1 id="main-content" tabindex="0">Saved Stories</h1>
+        <p class="page-description">Stories yang telah Anda simpan untuk dibaca nanti</p>
+        <div id="saved-stories-container" class="stories-container">
+          <div class="loading">Loading saved stories...</div>
         </div>
       </section>
     `;
   }
 
   async afterRender() {
-    this.storiesContainer = document.getElementById("stories-container");
-    this.presenter.loadStories();
+    this.savedStoriesContainer = document.getElementById(
+      "saved-stories-container"
+    );
+    this.presenter.loadSavedStories();
     this._setupEventListeners();
   }
 
   _setupEventListeners() {
-    // Event delegation untuk tombol save
-    this.storiesContainer.addEventListener("click", async (event) => {
-      if (event.target.classList.contains("save-story-btn")) {
+    // Event delegation untuk tombol remove
+    this.savedStoriesContainer.addEventListener("click", async (event) => {
+      if (event.target.classList.contains("remove-saved-btn")) {
         event.preventDefault();
-        await this._handleSaveStory(event);
+        await this._handleRemoveSavedStory(event);
       }
     });
   }
 
-  async _handleSaveStory(event) {
+  async _handleRemoveSavedStory(event) {
     const button = event.target;
     const storyId = button.dataset.storyId;
-    const storyData = JSON.parse(button.dataset.story);
+    const storyItem = button.closest(".story-item");
 
     try {
       button.disabled = true;
       button.textContent = "...";
 
-      const isSaved = await DataStore.toggleSaveStory(storyData);
+      await DataStore.removeSavedStory(storyId);
 
-      if (isSaved) {
-        button.innerHTML = "❤️ Saved";
-        button.classList.add("saved");
-        this._showNotification("Story berhasil disimpan!");
-      } else {
-        button.innerHTML = "🤍 Save";
-        button.classList.remove("saved");
-        this._showNotification("Story dihapus dari simpanan");
-      }
+      // Animasi hapus
+      storyItem.style.transition = "opacity 0.3s ease-out";
+      storyItem.style.opacity = "0";
+
+      setTimeout(() => {
+        storyItem.remove();
+        this._checkIfEmpty();
+      }, 300);
+
+      this._showNotification("Story dihapus dari simpanan");
     } catch (error) {
-      console.error("Error saving story:", error);
-      this._showNotification("Gagal menyimpan story", "error");
-    } finally {
+      console.error("Error removing saved story:", error);
+      this._showNotification("Gagal menghapus story", "error");
       button.disabled = false;
+      button.innerHTML = "🗑️ Remove";
+    }
+  }
+
+  _checkIfEmpty() {
+    const remainingStories =
+      this.savedStoriesContainer.querySelectorAll(".story-item");
+    if (remainingStories.length === 0) {
+      this._renderEmpty();
     }
   }
 
   _showNotification(message, type = "success") {
-    // Buat notifikasi sederhana
     const notification = document.createElement("div");
     notification.className = `notification ${type}`;
     notification.textContent = message;
@@ -91,12 +102,12 @@ export default class HomePage {
     }, 3000);
   }
 
-  showStories(stories) {
+  showSavedStories(stories) {
     if (!stories || stories.length === 0) {
       this._renderEmpty();
       return;
     }
-    this._renderStories(stories);
+    this._renderSavedStories(stories);
   }
 
   showError(message) {
@@ -104,28 +115,29 @@ export default class HomePage {
   }
 
   _renderError(message) {
-    this.storiesContainer.innerHTML = `<div class="error-message">${message}</div>`;
+    this.savedStoriesContainer.innerHTML = `
+      <div class="error-message">
+        <h3>Oops! Something went wrong</h3>
+        <p>${message}</p>
+      </div>
+    `;
   }
 
   _renderEmpty() {
-    this.storiesContainer.innerHTML = `<div class="empty-message">No stories available</div>`;
+    this.savedStoriesContainer.innerHTML = `
+      <div class="empty-message">
+        <h3>📖 Belum ada story yang disimpan</h3>
+        <p>Simpan story favorit Anda dari halaman beranda untuk membacanya nanti.</p>
+        <a href="#/" class="btn-primary">Jelajahi Stories</a>
+      </div>
+    `;
   }
 
-  async _renderStories(stories) {
-    const storiesContainer = document.getElementById("stories-container");
-
-    // Cek status saved untuk setiap story
-    const storiesWithSaveStatus = await Promise.all(
-      stories.map(async (story) => ({
-        ...story,
-        isSaved: await DataStore.isStorySaved(story.id),
-      }))
-    );
-
-    const storiesHTML = storiesWithSaveStatus
+  _renderSavedStories(stories) {
+    const storiesHTML = stories
       .map(
         (story) => `
-        <article class="story-item">
+        <article class="story-item saved-story-item">
           <div class="story-header">
             <img class="profile-pic" src="https://ui-avatars.com/api/?name=${
               story.name
@@ -134,17 +146,20 @@ export default class HomePage {
               <h2><a href="#/detail/${story.id}" class="story-title">${
           story.name
         }</a></h2>
-              <p class="story-date">${showFormattedDate(story.createdAt)}</p>
+              <p class="story-date">Posted: ${showFormattedDate(
+                story.createdAt
+              )}</p>
+              <p class="saved-date">Saved: ${showFormattedDate(
+                story.savedAt
+              )}</p>
             </div>
             <button 
-              class="save-story-btn ${story.isSaved ? "saved" : ""}" 
+              class="remove-saved-btn" 
               data-story-id="${story.id}"
-              data-story='${JSON.stringify(story)}'
-              aria-label="${story.isSaved ? "Unsave" : "Save"} story from ${
-          story.name
-        }"
+              aria-label="Remove story from saved"
+              title="Remove from saved stories"
             >
-              ${story.isSaved ? "❤️ Saved" : "🤍 Save"}
+              🗑️ Remove
             </button>
           </div>
           <img src="${story.photoUrl}" alt="Story image from ${
@@ -158,7 +173,7 @@ export default class HomePage {
       )
       .join("");
 
-    storiesContainer.innerHTML = storiesHTML;
+    this.savedStoriesContainer.innerHTML = storiesHTML;
 
     // Initialize maps
     stories.forEach((story) => {
