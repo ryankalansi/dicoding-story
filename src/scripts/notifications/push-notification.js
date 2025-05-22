@@ -28,10 +28,36 @@ const PushNotification = {
       console.log("Subscribed!", JSON.stringify(sub));
       this._updateButtons(true);
 
-      // ✅ Tampilkan pesan berhasil
-      alert("Selamat! Anda berhasil subscribe notifikasi.");
+      // Ambil token dari localStorage (pastikan user sudah login)
+      const token = localStorage.getItem("token");
+      if (!token) {
+        alert("Anda harus login terlebih dahulu untuk subscribe notifikasi.");
+        this._updateButtons(false);
+        return;
+      }
+
+      // Kirim subscription ke backend API dengan header Authorization
+      const response = await fetch(
+        "https://story-api.dicoding.dev/v1/notifications/subscribe",
+        {
+          method: "POST",
+          headers: {
+            "Authorization": `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(sub),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`Gagal subscribe ke server: ${response.status}`);
+      }
+
+      alert("Berhasil subscribe notifikasi.");
     } catch (err) {
       console.error("Gagal subscribe:", err);
+      alert(`Gagal subscribe: ${err.message}`);
+      this._updateButtons(false);
     }
   },
 
@@ -44,7 +70,6 @@ const PushNotification = {
       console.log("Unsubscribed from push notifications.");
       this._updateButtons(false);
 
-      // ❌ Tampilkan pesan berhenti
       alert("Anda telah berhenti berlangganan notifikasi.");
     }
   },
