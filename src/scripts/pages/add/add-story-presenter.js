@@ -23,13 +23,43 @@ const AddStoryPresenter = {
       } else {
         console.log("Story created successfully!");
 
+        // Debug: cek apakah PushNotification dan method-nya ada
+        console.log("PushNotification object:", PushNotification);
+        console.log(
+          "sendStoryCreatedNotification method:",
+          PushNotification.sendStoryCreatedNotification
+        );
+
         // Selalu kirim notifikasi lokal setelah berhasil menambahkan story
         try {
-          await PushNotification.sendStoryCreatedNotification(description);
-          console.log("Notification sent successfully");
+          if (
+            typeof PushNotification.sendStoryCreatedNotification === "function"
+          ) {
+            console.log(
+              "Calling sendStoryCreatedNotification with description:",
+              description
+            );
+            await PushNotification.sendStoryCreatedNotification(description);
+            console.log("Notification sent successfully");
+          } else {
+            console.error("sendStoryCreatedNotification is not a function!");
+            // Fallback langsung ke custom notification dengan description
+            PushNotification._showNotification(
+              `Story berhasil ditambahkan: ${description}`,
+              "success"
+            );
+          }
         } catch (notifError) {
           console.error("Failed to send notification:", notifError);
-          // Tetap anggap berhasil meskipun notifikasi gagal
+          // Fallback ke custom notification dengan description
+          try {
+            PushNotification._showNotification(
+              `Story berhasil ditambahkan: ${description}`,
+              "success"
+            );
+          } catch (fallbackError) {
+            console.error("Even fallback notification failed:", fallbackError);
+          }
         }
 
         onSuccess();

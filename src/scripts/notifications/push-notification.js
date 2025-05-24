@@ -97,6 +97,62 @@ const PushNotification = {
     this._updateButtons(!!sub);
   },
 
+  // Method yang hilang - untuk mengirim notifikasi lokal saat story dibuat
+  async sendStoryCreatedNotification(description) {
+    console.log("sendStoryCreatedNotification called with:", description);
+    console.log("Notification permission:", Notification.permission);
+
+    // Buat pesan dengan description lengkap
+    const shortDesc =
+      description.length > 50
+        ? `${description.substring(0, 50)}...`
+        : description;
+    const customNotificationMessage = `Story berhasil ditambahkan: ${description}`;
+
+    try {
+      // Cek permission dulu
+      if (Notification.permission === "granted") {
+        console.log("Creating native notification...");
+
+        // Buat notifikasi lokal dengan description
+        const notification = new Notification("Story Berhasil Dibuat!", {
+          body: `Story berhasil ditambahkan: ${shortDesc}`,
+          icon: "/favicon-192.png",
+          badge: "/favicon-192.png",
+          tag: "story-created",
+          data: {
+            type: "story-created",
+            description: description,
+          },
+        });
+
+        // Auto close setelah 7 detik (lebih lama karena text lebih panjang)
+        setTimeout(() => {
+          notification.close();
+        }, 7000);
+
+        // Optional: handle click event
+        notification.onclick = function () {
+          window.focus();
+          this.close();
+        };
+
+        console.log("Native notification created successfully");
+      } else {
+        console.log(
+          "Notification permission not granted, showing custom notification"
+        );
+      }
+
+      // SELALU tampilkan custom notification dengan description lengkap
+      this._showNotification(customNotificationMessage, "success");
+    } catch (error) {
+      console.error("Failed to send local notification:", error);
+      // Fallback ke custom notification dengan description
+      this._showNotification(customNotificationMessage, "success");
+    }
+  },
+
   _updateButtons(isSubscribed) {
     const subscribeBtn = document.querySelector("#subscribe-push");
     const unsubscribeBtn = document.querySelector("#unsubscribe-push");
