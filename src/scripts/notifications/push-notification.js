@@ -27,7 +27,20 @@ const PushNotification = {
 
       console.log("Subscribed!", JSON.stringify(sub));
 
-      // Cek apakah user sudah login untuk kirim ke backend
+      // Parse subscription menjadi format payload yang benar untuk backend
+      const subscriptionPayload = {
+        endpoint: sub.endpoint,
+        keys: {
+          p256dh: sub.getKey
+            ? this._arrayBufferToBase64(sub.getKey("p256dh"))
+            : null,
+          auth: sub.getKey
+            ? this._arrayBufferToBase64(sub.getKey("auth"))
+            : null,
+        },
+      };
+
+      // Cek token login
       const token = localStorage.getItem("token");
       if (
         token &&
@@ -35,7 +48,6 @@ const PushNotification = {
         token !== "undefined" &&
         token.trim() !== ""
       ) {
-        // Kirim subscription ke backend API dengan header Authorization
         const response = await fetch(
           "https://story-api.dicoding.dev/v1/notifications/subscribe",
           {
@@ -44,13 +56,12 @@ const PushNotification = {
               "Authorization": `Bearer ${token}`,
               "Content-Type": "application/json",
             },
-            body: JSON.stringify(sub),
+            body: JSON.stringify(subscriptionPayload),
           }
         );
 
         if (!response.ok) {
           console.warn(`Gagal subscribe ke server: ${response.status}`);
-          // Tapi tetap lanjut karena browser subscription sudah berhasil
         }
       }
 
@@ -102,13 +113,11 @@ const PushNotification = {
   },
 
   _showNotification(message, type = "info") {
-    // Buat elemen notifikasi container
     const notification = document.createElement("div");
     notification.className = `notification notification-${type}`;
 
-    // Buat icon element
     const icon = document.createElement("img");
-    icon.src = "/favicon-192.png"; // Gunakan icon yang sama seperti di service worker
+    icon.src = "/favicon-192.png";
     icon.alt = "Notification Icon";
     Object.assign(icon.style, {
       width: "24px",
@@ -117,18 +126,15 @@ const PushNotification = {
       flexShrink: "0",
     });
 
-    // Buat text element
     const textElement = document.createElement("span");
     textElement.textContent = message;
 
-    // Tambahkan icon dan text ke notification
     notification.appendChild(icon);
     notification.appendChild(textElement);
 
-    // Styling untuk notifikasi container
     Object.assign(notification.style, {
       position: "fixed",
-      bottom: "20px", // Pindah ke bawah
+      bottom: "20px",
       right: "20px",
       display: "flex",
       alignItems: "center",
@@ -145,7 +151,6 @@ const PushNotification = {
       transition: "transform 0.3s ease-in-out",
     });
 
-    // Warna berdasarkan type
     switch (type) {
       case "success":
         notification.style.backgroundColor = "#4CAF50";
@@ -160,15 +165,12 @@ const PushNotification = {
         notification.style.backgroundColor = "#757575";
     }
 
-    // Tambahkan ke body
     document.body.appendChild(notification);
 
-    // Animasi masuk
     setTimeout(() => {
       notification.style.transform = "translateX(0)";
     }, 100);
 
-    // Hapus setelah 4 detik (lebih lama karena ada icon)
     setTimeout(() => {
       notification.style.transform = "translateX(100%)";
       setTimeout(() => {
@@ -179,38 +181,6 @@ const PushNotification = {
     }, 4000);
   },
 
-  async sendStoryCreatedNotification(description) {
-    // Kirim notifikasi lokal ketika story berhasil dibuat
-    const shortDescription =
-      description.length > 50
-        ? description.substring(0, 50) + "..."
-        : description;
-
-    this._showNotification(
-      `Story baru telah ditambahkan: "${shortDescription}"`,
-      "success"
-    );
-
-    // Optional: Juga kirim browser notification jika user sudah subscribe
-    if ("serviceWorker" in navigator && "PushManager" in window) {
-      try {
-        const reg = await navigator.serviceWorker.ready;
-        const sub = await reg.pushManager.getSubscription();
-
-        if (sub) {
-          // Kirim notifikasi melalui service worker
-          reg.active.postMessage({
-            type: "SHOW_NOTIFICATION",
-            title: "Dicoding Stories",
-            body: `Story baru telah ditambahkan: "${shortDescription}"`,
-            icon: "/favicon-192.png",
-          });
-        }
-      } catch (error) {
-        console.log("Service worker notification error:", error);
-      }
-    }
-  },
   _urlBase64ToUint8Array(base64String) {
     const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
     const base64 = (base64String + padding)
@@ -218,6 +188,13 @@ const PushNotification = {
       .replace(/_/g, "/");
     const rawData = atob(base64);
     return Uint8Array.from([...rawData].map((c) => c.charCodeAt(0)));
+  },
+
+  _arrayBufferToBase64(buffer) {
+    let binary = "";
+    const bytes = new Uint8Array(buffer);
+    bytes.forEach((b) => (binary += String.fromCharCode(b)));
+    return btoa(binary);
   },
 };
 
