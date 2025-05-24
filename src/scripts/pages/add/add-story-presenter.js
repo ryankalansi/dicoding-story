@@ -23,14 +23,12 @@ const AddStoryPresenter = {
       } else {
         console.log("Story created successfully!");
 
-        // Debug: cek apakah PushNotification dan method-nya ada
         console.log("PushNotification object:", PushNotification);
         console.log(
           "sendStoryCreatedNotification method:",
           PushNotification.sendStoryCreatedNotification
         );
 
-        // Selalu kirim notifikasi lokal setelah berhasil menambahkan story
         try {
           if (
             typeof PushNotification.sendStoryCreatedNotification === "function"

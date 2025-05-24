@@ -27,7 +27,7 @@ const PushNotification = {
 
       console.log("Subscribed!", JSON.stringify(sub));
 
-      // Parse subscription menjadi format payload yang benar untuk backend
+      // Parse subscription
       const subscriptionPayload = {
         endpoint: sub.endpoint,
         keys: {
@@ -97,12 +97,11 @@ const PushNotification = {
     this._updateButtons(!!sub);
   },
 
-  // Method yang hilang - untuk mengirim notifikasi lokal saat story dibuat
   async sendStoryCreatedNotification(description) {
     console.log("sendStoryCreatedNotification called with:", description);
     console.log("Notification permission:", Notification.permission);
 
-    // Buat pesan dengan description lengkap
+    // Buat pesan dengan description
     const shortDesc =
       description.length > 50
         ? `${description.substring(0, 50)}...`
@@ -110,11 +109,11 @@ const PushNotification = {
     const customNotificationMessage = `Story berhasil ditambahkan: ${description}`;
 
     try {
-      // Cek permission dulu
+      // Cek permission
       if (Notification.permission === "granted") {
         console.log("Creating native notification...");
 
-        // Buat notifikasi lokal dengan description
+        // Buat notifikasi dengan description
         const notification = new Notification("Story Berhasil Dibuat!", {
           body: `Story berhasil ditambahkan: ${shortDesc}`,
           icon: "/favicon-192.png",
@@ -144,11 +143,9 @@ const PushNotification = {
         );
       }
 
-      // SELALU tampilkan custom notification dengan description lengkap
       this._showNotification(customNotificationMessage, "success");
     } catch (error) {
       console.error("Failed to send local notification:", error);
-      // Fallback ke custom notification dengan description
       this._showNotification(customNotificationMessage, "success");
     }
   },
