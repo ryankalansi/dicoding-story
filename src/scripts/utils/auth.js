@@ -1,4 +1,5 @@
 import StoriesAPI from "../data/api";
+import PushNotification from "../notifications/push-notification";
 
 const Auth = {
   init({ loginButton, logoutButton, registerButton }) {
@@ -29,12 +30,18 @@ const Auth = {
       this._logoutButton.style.display = "block";
       this._logoutButton.textContent = `Logout (${user.name})`;
     }
+
+    // TAMBAHAN: Update push notification buttons setelah login
+    PushNotification.checkSubscription();
   },
 
   _showLoggedOutState() {
     if (this._loginButton) this._loginButton.style.display = "block";
     if (this._registerButton) this._registerButton.style.display = "block";
     if (this._logoutButton) this._logoutButton.style.display = "none";
+
+    // TAMBAHAN: Update push notification buttons setelah logout
+    PushNotification.checkSubscription();
   },
 
   _addEventListeners() {

@@ -1,3 +1,5 @@
+import CONFIG from "../config";
+
 const PushNotification = {
   async requestPermission() {
     if (!("Notification" in window) || !("serviceWorker" in navigator)) {
@@ -40,16 +42,19 @@ const PushNotification = {
         },
       };
 
-      // Cek token login
-      const token = localStorage.getItem("token");
+      // PERBAIKAN: Ambil token dari localStorage dengan key "user"
+      const user = JSON.parse(localStorage.getItem("user")) || {};
+      const token = user.token;
+
       if (
         token &&
         token !== "null" &&
         token !== "undefined" &&
         token.trim() !== ""
       ) {
+        // PERBAIKAN: Gunakan CONFIG.BASE_URL untuk endpoint
         const response = await fetch(
-          "https://story-api.dicoding.dev/v1/notifications/subscribe",
+          `${CONFIG.BASE_URL}/notifications/subscribe`,
           {
             method: "POST",
             headers: {
@@ -60,13 +65,40 @@ const PushNotification = {
           }
         );
 
-        if (!response.ok) {
-          console.warn(`Gagal subscribe ke server: ${response.status}`);
-        }
-      }
+        const responseData = await response.json();
 
-      this._updateButtons(true);
-      this._showNotification("Anda sudah berhasil berlangganan", "success");
+        if (response.ok && !responseData.error) {
+          console.log("Successfully subscribed to server:", responseData);
+          this._updateButtons(true);
+          this._showNotification(
+            "Anda sudah berhasil berlangganan push notification",
+            "success"
+          );
+
+          // PERBAIKAN: Tampilkan notifikasi browser
+          this._showBrowserNotification(
+            "Push Notification Aktif!",
+            "Anda akan menerima notifikasi untuk story baru"
+          );
+        } else {
+          console.warn(
+            `Gagal subscribe ke server: ${response.status}`,
+            responseData
+          );
+          this._showNotification(
+            `Gagal subscribe: ${responseData.message || "Unknown error"}`,
+            "error"
+          );
+        }
+      } else {
+        console.warn("Token tidak ditemukan. User belum login.");
+        this._showNotification(
+          "Silakan login terlebih dahulu untuk mengaktifkan notifikasi",
+          "error"
+        );
+        this._updateButtons(false);
+        return;
+      }
     } catch (err) {
       console.error("Gagal subscribe:", err);
       this._showNotification(`Gagal subscribe: ${err.message}`, "error");
@@ -80,10 +112,45 @@ const PushNotification = {
 
     if (sub) {
       try {
+        // PERBAIKAN: Unsubscribe dari server juga
+        const user = JSON.parse(localStorage.getItem("user")) || {};
+        const token = user.token;
+
+        if (
+          token &&
+          token !== "null" &&
+          token !== "undefined" &&
+          token.trim() !== ""
+        ) {
+          const response = await fetch(
+            `${CONFIG.BASE_URL}/notifications/subscribe`,
+            {
+              method: "DELETE",
+              headers: {
+                "Authorization": `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                endpoint: sub.endpoint,
+              }),
+            }
+          );
+
+          if (!response.ok) {
+            console.warn(`Gagal unsubscribe dari server: ${response.status}`);
+          }
+        }
+
         await sub.unsubscribe();
         console.log("Unsubscribed from push notifications.");
         this._updateButtons(false);
         this._showNotification("Anda berhenti berlangganan", "info");
+
+        // PERBAIKAN: Tampilkan notifikasi browser
+        this._showBrowserNotification(
+          "Push Notification Dimatikan",
+          "Anda tidak akan menerima notifikasi lagi"
+        );
       } catch (err) {
         console.error("Gagal unsubscribe:", err);
         this._showNotification("Gagal berhenti berlangganan", "error");
@@ -94,7 +161,13 @@ const PushNotification = {
   async checkSubscription() {
     const reg = await navigator.serviceWorker.ready;
     const sub = await reg.pushManager.getSubscription();
-    this._updateButtons(!!sub);
+
+    // PERBAIKAN: Cek juga apakah user sudah login
+    const user = JSON.parse(localStorage.getItem("user")) || {};
+    const isLoggedIn = !!user.token;
+
+    // Tampilkan tombol hanya jika user sudah login dan browser support
+    this._updateButtons(!!sub && isLoggedIn, isLoggedIn);
   },
 
   async sendStoryCreatedNotification(description) {
@@ -109,39 +182,11 @@ const PushNotification = {
     const customNotificationMessage = `Story berhasil ditambahkan: ${description}`;
 
     try {
-      // Cek permission
-      if (Notification.permission === "granted") {
-        console.log("Creating native notification...");
-
-        // Buat notifikasi dengan description
-        const notification = new Notification("Story Berhasil Dibuat!", {
-          body: `Story berhasil ditambahkan: ${shortDesc}`,
-          icon: "/favicon-192.png",
-          badge: "/favicon-192.png",
-          tag: "story-created",
-          data: {
-            type: "story-created",
-            description: description,
-          },
-        });
-
-        // Auto close setelah 7 detik (lebih lama karena text lebih panjang)
-        setTimeout(() => {
-          notification.close();
-        }, 7000);
-
-        // Optional: handle click event
-        notification.onclick = function () {
-          window.focus();
-          this.close();
-        };
-
-        console.log("Native notification created successfully");
-      } else {
-        console.log(
-          "Notification permission not granted, showing custom notification"
-        );
-      }
+      // PERBAIKAN: Tampilkan notifikasi browser
+      this._showBrowserNotification(
+        "Story Berhasil Dibuat!",
+        `Story berhasil ditambahkan: ${shortDesc}`
+      );
 
       this._showNotification(customNotificationMessage, "success");
     } catch (error) {
@@ -150,12 +195,43 @@ const PushNotification = {
     }
   },
 
-  _updateButtons(isSubscribed) {
+  // PERBAIKAN: Method baru untuk notifikasi browser
+  _showBrowserNotification(title, body) {
+    if (Notification.permission === "granted") {
+      const notification = new Notification(title, {
+        body: body,
+        icon: "/favicon-192.png",
+        badge: "/favicon-192.png",
+        tag: "dicoding-stories",
+        requireInteraction: false,
+      });
+
+      // Auto close setelah 5 detik
+      setTimeout(() => {
+        notification.close();
+      }, 5000);
+
+      // Handle click event
+      notification.onclick = function () {
+        window.focus();
+        this.close();
+      };
+
+      console.log("Browser notification shown:", title);
+    }
+  },
+
+  // PERBAIKAN: Update method untuk menampilkan tombol berdasarkan login status
+  _updateButtons(isSubscribed, isLoggedIn = true) {
     const subscribeBtn = document.querySelector("#subscribe-push");
     const unsubscribeBtn = document.querySelector("#unsubscribe-push");
 
     if (subscribeBtn && unsubscribeBtn) {
-      if (isSubscribed) {
+      if (!isLoggedIn) {
+        // Jika belum login, sembunyikan kedua tombol
+        subscribeBtn.hidden = true;
+        unsubscribeBtn.hidden = true;
+      } else if (isSubscribed) {
         subscribeBtn.hidden = true;
         unsubscribeBtn.hidden = false;
       } else {
