@@ -75,8 +75,8 @@ const PushNotification = {
             "success"
           );
 
-          // PERBAIKAN: Tampilkan notifikasi browser
-          this._showBrowserNotification(
+          // PERBAIKAN: Gunakan Service Worker untuk notifikasi
+          await this._showBrowserNotification(
             "Push Notification Aktif!",
             "Anda akan menerima notifikasi untuk story baru"
           );
@@ -146,8 +146,8 @@ const PushNotification = {
         this._updateButtons(false);
         this._showNotification("Anda berhenti berlangganan", "info");
 
-        // PERBAIKAN: Tampilkan notifikasi browser
-        this._showBrowserNotification(
+        // PERBAIKAN: Gunakan Service Worker untuk notifikasi
+        await this._showBrowserNotification(
           "Push Notification Dimatikan",
           "Anda tidak akan menerima notifikasi lagi"
         );
@@ -182,8 +182,8 @@ const PushNotification = {
     const customNotificationMessage = `Story berhasil ditambahkan: ${description}`;
 
     try {
-      // PERBAIKAN: Tampilkan notifikasi browser
-      this._showBrowserNotification(
+      // PERBAIKAN: Gunakan Service Worker untuk notifikasi
+      await this._showBrowserNotification(
         "Story Berhasil Dibuat!",
         `Story berhasil ditambahkan: ${shortDesc}`
       );
@@ -195,29 +195,63 @@ const PushNotification = {
     }
   },
 
-  // PERBAIKAN: Method baru untuk notifikasi browser
-  _showBrowserNotification(title, body) {
-    if (Notification.permission === "granted") {
-      const notification = new Notification(title, {
-        body: body,
-        icon: "/favicon-192.png",
-        badge: "/favicon-192.png",
-        tag: "dicoding-stories",
-        requireInteraction: false,
-      });
+  // PERBAIKAN: Method baru untuk notifikasi browser yang kompatibel dengan mobile
+  async _showBrowserNotification(title, body) {
+    if (Notification.permission !== "granted") {
+      console.log("Notification permission not granted");
+      return;
+    }
 
-      // Auto close setelah 5 detik
-      setTimeout(() => {
-        notification.close();
-      }, 5000);
+    try {
+      // Cek apakah service worker tersedia
+      if ("serviceWorker" in navigator) {
+        const registration = await navigator.serviceWorker.ready;
 
-      // Handle click event
-      notification.onclick = function () {
-        window.focus();
-        this.close();
-      };
+        // Gunakan Service Worker Registration untuk notifikasi (lebih kompatibel dengan mobile)
+        await registration.showNotification(title, {
+          body: body,
+          icon: "/favicon-192.png",
+          badge: "/favicon-192.png",
+          tag: "dicoding-stories",
+          requireInteraction: false,
+          vibrate: [100, 50, 100],
+          data: {
+            url: window.location.href,
+          },
+        });
 
-      console.log("Browser notification shown:", title);
+        console.log("Service Worker notification shown:", title);
+      } else {
+        // Fallback untuk browser yang tidak support service worker
+        // Tapi tetap cek apakah Notification constructor tersedia
+        if (typeof Notification !== "undefined" && Notification.constructor) {
+          const notification = new Notification(title, {
+            body: body,
+            icon: "/favicon-192.png",
+            badge: "/favicon-192.png",
+            tag: "dicoding-stories",
+            requireInteraction: false,
+          });
+
+          // Auto close setelah 5 detik
+          setTimeout(() => {
+            notification.close();
+          }, 5000);
+
+          // Handle click event
+          notification.onclick = function () {
+            window.focus();
+            this.close();
+          };
+
+          console.log("Direct notification shown:", title);
+        } else {
+          console.log("Notification constructor not available");
+        }
+      }
+    } catch (error) {
+      console.error("Error showing browser notification:", error);
+      // Jika gagal, coba alternatif lain atau hanya log
     }
   },
 
