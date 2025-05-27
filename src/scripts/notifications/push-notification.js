@@ -42,7 +42,6 @@ const PushNotification = {
         },
       };
 
-      // PERBAIKAN: Ambil token dari localStorage dengan key "user"
       const user = JSON.parse(localStorage.getItem("user")) || {};
       const token = user.token;
 
@@ -52,7 +51,6 @@ const PushNotification = {
         token !== "undefined" &&
         token.trim() !== ""
       ) {
-        // PERBAIKAN: Gunakan CONFIG.BASE_URL untuk endpoint
         const response = await fetch(
           `${CONFIG.BASE_URL}/notifications/subscribe`,
           {
@@ -75,7 +73,6 @@ const PushNotification = {
             "success"
           );
 
-          // PERBAIKAN: Gunakan Service Worker untuk notifikasi
           await this._showBrowserNotification(
             "Push Notification Aktif!",
             "Anda akan menerima notifikasi untuk story baru"
@@ -112,7 +109,6 @@ const PushNotification = {
 
     if (sub) {
       try {
-        // PERBAIKAN: Unsubscribe dari server juga
         const user = JSON.parse(localStorage.getItem("user")) || {};
         const token = user.token;
 
@@ -146,7 +142,6 @@ const PushNotification = {
         this._updateButtons(false);
         this._showNotification("Anda berhenti berlangganan", "info");
 
-        // PERBAIKAN: Gunakan Service Worker untuk notifikasi
         await this._showBrowserNotification(
           "Push Notification Dimatikan",
           "Anda tidak akan menerima notifikasi lagi"
@@ -162,7 +157,6 @@ const PushNotification = {
     const reg = await navigator.serviceWorker.ready;
     const sub = await reg.pushManager.getSubscription();
 
-    // PERBAIKAN: Cek juga apakah user sudah login
     const user = JSON.parse(localStorage.getItem("user")) || {};
     const isLoggedIn = !!user.token;
 
@@ -182,7 +176,6 @@ const PushNotification = {
     const customNotificationMessage = `Story berhasil ditambahkan: ${description}`;
 
     try {
-      // PERBAIKAN: Gunakan Service Worker untuk notifikasi
       await this._showBrowserNotification(
         "Story Berhasil Dibuat!",
         `Story berhasil ditambahkan: ${shortDesc}`
@@ -195,7 +188,6 @@ const PushNotification = {
     }
   },
 
-  // PERBAIKAN: Method baru untuk notifikasi browser yang kompatibel dengan mobile
   async _showBrowserNotification(title, body) {
     if (Notification.permission !== "granted") {
       console.log("Notification permission not granted");
@@ -207,7 +199,6 @@ const PushNotification = {
       if ("serviceWorker" in navigator) {
         const registration = await navigator.serviceWorker.ready;
 
-        // Gunakan Service Worker Registration untuk notifikasi (lebih kompatibel dengan mobile)
         await registration.showNotification(title, {
           body: body,
           icon: "/favicon-192.png",
@@ -251,11 +242,9 @@ const PushNotification = {
       }
     } catch (error) {
       console.error("Error showing browser notification:", error);
-      // Jika gagal, coba alternatif lain atau hanya log
     }
   },
 
-  // PERBAIKAN: Update method untuk menampilkan tombol berdasarkan login status
   _updateButtons(isSubscribed, isLoggedIn = true) {
     const subscribeBtn = document.querySelector("#subscribe-push");
     const unsubscribeBtn = document.querySelector("#unsubscribe-push");

@@ -46,7 +46,6 @@ self.addEventListener("notificationclick", function (event) {
   );
 });
 
-// Tambahan: Handle message dari main thread untuk notifikasi lokal
 self.addEventListener("message", function (event) {
   if (event.data && event.data.type === "SHOW_NOTIFICATION") {
     const { title, body, icon } = event.data;
